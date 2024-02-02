@@ -31,7 +31,9 @@ export default {
 
 <style lang="scss" scoped>
 .navigation {
-  position: relative;
+  position: fixed;
+  top: 0%;
+  left: 0%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -40,6 +42,7 @@ export default {
   width: 100%;
   height: 88px;
   color: #fff;
+  z-index: 10;
   .content {
     display: flex;
     align-items: center;

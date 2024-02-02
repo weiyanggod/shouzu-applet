@@ -1,8 +1,8 @@
 <template>
-  <view>
+  <view class="page">
     <Navigation title="绑定"></Navigation>
     <view style="padding: 20px">
-      <u-form labelPosition="top" label-width="auto" :model="form" :rules="rules">
+      <u-form ref="uForm" labelPosition="top" label-width="auto" :model="form" :rules="rules">
         <u-form-item label="手机号" prop="phone" borderBottom>
           <u-input v-model="form.phone" placeholder="请输入手机号" border="none"></u-input>
         </u-form-item>
@@ -19,6 +19,7 @@
 
 <script>
 import Navigation from '@/components/navigation'
+import { bindApi } from '@/api/index.js'
 export default {
   components: { Navigation },
   data() {
@@ -45,9 +46,23 @@ export default {
   },
   computed: {},
   methods: {
-    binding() {
-      // this.showModal('当前手机号无可绑定合同信息')
-      this.showModal('当前合同已绑定联系人,无法再次绑定,请联系梅里集团业务人员办理')
+    async binding() {
+      const app = getApp()
+      const res = await app.login()
+      uni.setStorageSync('token', res.data.token)
+      this.$refs.uForm.validate().then(res => {
+        const data = {
+          code: this.form.number,
+          phone: this.form.phone
+        }
+        bindApi(data).then(res => {
+          if (res.state !== 0) {
+            this.showModal(res.message)
+          } else {
+            this.showModal('绑定成功')
+          }
+        })
+      })
     },
     showModal(text) {
       uni.showModal({
@@ -81,4 +96,8 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.page {
+  margin-top: 90px;
+}
+</style>

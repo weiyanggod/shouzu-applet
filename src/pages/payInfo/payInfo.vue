@@ -1,29 +1,19 @@
 <template>
   <view class="page">
     <Navigation title="缴费通知"></Navigation>
-    <view class="car" v-for="(item, index) in 3" :key="index">
-      <u-form :labelStyle="labelStyle" labelPosition="left" label-width="130" :model="form" ref="uForm">
-        <u-form-item label="消息日期" prop="date" borderBottom ref="item1">
-          <u-input v-model="form.date" border="none"></u-input>
-        </u-form-item>
-        <u-form-item label="通知类型" prop="type" borderBottom ref="item1">
-          <u-input v-model="form.type" border="none"></u-input>
-        </u-form-item>
-        <u-form-item label="缴费区间" prop="section" borderBottom ref="item1">
-          <u-input v-model="form.section" border="none"></u-input>
-        </u-form-item>
-        <u-form-item class="form-item" label="合同编号" prop="number" borderBottom ref="item1">
-          <u-input v-model="form.number" border="none"></u-input>
-        </u-form-item>
-        <u-form-item label="租赁位置" prop="location" borderBottom ref="item1">
-          <u-input v-model="form.location" border="none"></u-input>
-        </u-form-item>
-        <u-form-item label="到期日期" prop="expire" borderBottom ref="item1">
-          <u-input v-model="form.expire" border="none"></u-input>
-        </u-form-item>
-      </u-form>
+    <view class="car" v-for="(item, index) in list" :key="index">
+      <u-cell-group style="width: 80%">
+        <u-cell title="消息日期" :value="item.messageDate || ''"></u-cell>
+        <u-cell title="通知类型" :value="item.noticeType || ''"></u-cell>
+        <u-cell title="缴费区间" :value="(item.startDate || '') + ' - ' + (item.endDate || '')"></u-cell>
+        <u-cell title="费用类型" :value="item.payTypeName || ''"></u-cell>
+        <u-cell title="合同编号" :value="item.code || ''"></u-cell>
+        <u-cell title="租赁位置" :label="item.address || ''"></u-cell>
+        <u-cell title="到期日期" :value="item.endDate || ''"></u-cell>
+        <u-cell title="应缴金额" :value="item.payableMoney || ''"></u-cell>
+      </u-cell-group>
       <view class="mt-10" style="width: 80px; margin-left: auto">
-        <u-button @click="submit" type="primary" shape="circle" size="small">立即缴费</u-button>
+        <u-button @click="submit(item)" type="primary" shape="circle" size="small">立即缴费</u-button>
       </view>
     </view>
   </view>
@@ -31,28 +21,56 @@
 
 <script>
 import Navigation from '@/components/navigation'
+import { detailListApi, payApi } from '@/api/index.js'
 export default {
   components: { Navigation },
   data() {
     return {
-      form: {
-        date: '2023-12-12',
-        type: '正常缴费通知',
-        section: 'xxxxxx',
-        number: 'HT0000000000',
-        location: 'xxxxxx',
-        expire: '2025-12-12'
-      }
+      list: []
     }
   },
   computed: {},
   methods: {
-    submit() {}
+    submit(item) {
+      const data = {
+        accountsCode: item.accountsCode,
+        code: item.code,
+        endDate: item.endDate,
+        money: item.payableMoney,
+        payDate: item.payDate,
+        payType: item.payType,
+        startDate: item.startDate,
+        registerDate: new Date(),
+        tollCompany: item.tollCompany
+      }
+      payApi([data]).then(res => {
+        if (res.state === 0) {
+          uni.showModal({
+            title: '提示!',
+            content: '缴费成功',
+            showCancel: false,
+            confirmText: '确定'
+          })
+        } else {
+          uni.showModal({
+            title: '提示!',
+            content: res.message,
+            showCancel: false,
+            confirmText: '确定'
+          })
+        }
+      })
+    }
   },
   watch: {},
 
   // 页面周期函数--监听页面加载
-  onLoad() {},
+  onLoad() {
+    detailListApi({ isTotal: 1 }).then(res => {
+      console.log(res)
+      this.list = res.data
+    })
+  },
   // 页面周期函数--监听页面初次渲染完成
   onReady() {},
   // 页面周期函数--监听页面显示(not-nvue)
@@ -63,17 +81,17 @@ export default {
 <style lang="scss" scoped>
 .page {
   padding-bottom: 20px;
+  margin-top: 130px;
 }
 .car {
   display: flex;
   flex-direction: column;
-  align-items: center;
   width: 320px;
   margin-left: 50%;
   margin-top: 30px;
   transform: translate(-50%);
   background-color: #fff;
-  box-shadow: 0px 23px 35px -20px rgba(94, 93, 93, 0.4);
+  box-shadow: 0px 0px 50px rgba(94, 93, 93, 0.4);
   border-radius: 27px;
   padding: 0px 10px 10px 26px;
 }

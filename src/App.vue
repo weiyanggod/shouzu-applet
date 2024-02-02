@@ -1,10 +1,8 @@
 <script>
-import { loginApi } from '@/api'
+import { getTokenApi } from '@/api'
 export default {
   // 全局变量
   globalData: {
-    appid: 'wx9b7eb684f20ec1c3',
-    secret: 'c96852db592c89efcf0a9b46e0d98960',
     code: ''
   },
   // 初始化完成
@@ -26,13 +24,14 @@ export default {
     },
     getOpenId(code) {
       return new Promise(async (resolve, reject) => {
-        const res = await loginApi(code)
+        const res = await getTokenApi({ code })
         resolve(res)
       })
     },
     async login() {
       const code = await this.getCode()
-      this.getOpenId(code)
+      const res = await this.getOpenId(code)
+      return res
     }
   }
 }

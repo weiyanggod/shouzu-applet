@@ -20,11 +20,12 @@
 
 <script>
 import Navigation from '@/components/navigation'
+import { loginApi } from '@/api/index.js'
 export default {
   components: { Navigation },
   data() {
     return {
-      swiperList: [require('@/static/index/轮播图1.png'), require('@/static/index/轮播图2.png')],
+      swiperList: [require('@/static/index/轮播图2.png')],
       list: [
         {
           text: '立即绑定',
@@ -43,28 +44,31 @@ export default {
   },
   created() {},
   methods: {
-    to(data) {
+    async to(data) {
+      const app = getApp()
+      const code = await app.getCode()
       if (data.text === '立即绑定') {
         uni.navigateTo({ url: '/pages/binding/binding' })
       }
       if (data.text === '缴费通知') {
-        const app = getApp()
-        const token = uni.getStorageSync('token')
-        if (!token) {
-          app.login()
-        }
-        // this.showModal()
-        uni.navigateTo({ url: '/pages/payInfo/payInfo' })
+        loginApi({ code }).then(res => {
+          if (res.state !== 0) {
+            this.showModal(res.message)
+          } else {
+            uni.setStorageSync('token', res.data.token)
+            uni.navigateTo({ url: '/pages/payInfo/payInfo' })
+          }
+        })
       }
       if (data.text === '立即缴费') {
-        const app = getApp()
-
-        const token = uni.getStorageSync('token')
-        if (!token) {
-          app.login()
-        }
-        // this.showModal()
-        uni.navigateTo({ url: '/pages/pay/pay' })
+        loginApi({ code }).then(res => {
+          if (res.state !== 0) {
+            this.showModal(res.message)
+          } else {
+            uni.setStorageSync('token', res.data.token)
+            uni.navigateTo({ url: '/pages/pay/pay' })
+          }
+        })
       }
     },
     showModal() {

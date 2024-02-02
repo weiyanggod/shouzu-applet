@@ -1,26 +1,41 @@
 <template>
-  <view>
+  <view class="page">
     <Navigation title="立即缴费"></Navigation>
-    <view class="search">
-      <u-search
-        placeholder="输入关键词"
-        v-model="value"
-        :actionStyle="{ color: '#3b7bff', 'font-weight': 600, 'font-size': '14px' }"
-      ></u-search>
-    </view>
+    <u-cell-group>
+      <u-cell isLink title="搜索项目" @click="$refs.popup.showPopup()"></u-cell>
+    </u-cell-group>
+    <niceui-popup-select
+      isSearch
+      ref="popup"
+      :columns="selectList"
+      :is-search="false"
+      :option="{ label: 'address', value: 'code' }"
+      @confirm="confirmFruit"
+    ></niceui-popup-select>
     <view class="text">搜索结果</view>
     <view class="ml-15">
-      <u-checkbox-group v-model="checkboxValue" placement="column">
-        <view class="box" v-for="(item, index) in list" :key="index">
-          <u-checkbox name="HT000000001"> </u-checkbox>
+      <u-checkbox-group v-model="checkboxValue" placement="column" @change="change">
+        <view class="box" v-for="(item, index) in detailsList" :key="index">
+          <u-checkbox :name="index"> </u-checkbox>
           <view class="right-text">
-            <view style="font-size: 14px; color: #000">物业服务费</view>
-            <view>合同编号：HT000000001</view>
-            <view>缴费周期：2023/1/1-2023/12/12</view>
+            <view style="font-size: 14px; color: #000">{{ item.payTypeName }}</view>
+            <view>合同编号：{{ item.code }}</view>
+            <view>缴费周期：{{ item.startDate ? item.startDate : '' }}-{{ item.endDate ? item.endDate : '' }}</view>
             <view style="display: flex; align-items: center">
-              <view>缴费金额：<text :style="{ color: item.isOverdue ? '#f26161' : '' }"> 1895.50元</text></view>
+              <view
+                >缴费金额：<text :style="{ color: item.isOverdue ? '#f26161' : '' }">
+                  {{ item.payableMoney }}元</text
+                ></view
+              >
               <view class="ml-5">
-                <u-tag v-if="!item.isOverdue" text="正常" type="success" size="mini" plain plainFill></u-tag>
+                <u-tag
+                  v-if="item.noticeType !== '逾期缴费通知'"
+                  text=""
+                  type="success"
+                  size="mini"
+                  plain
+                  plainFill
+                ></u-tag>
                 <u-tag v-else text="逾期" type="error" size="mini" plain plainFill></u-tag>
               </view>
             </view>
@@ -31,7 +46,7 @@
     <view class="bottom">
       <view class="flex-ac-sb" style="width: 35%">
         <view>合计：</view>
-        <view style="color: #3b7bff"> ￥196.00 </view>
+        <view style="color: #3b7bff">{{ totalNumber }}</view>
       </view>
       <view style="width: 100px">
         <u-button
@@ -49,61 +64,130 @@
 
 <script>
 import Navigation from '@/components/navigation'
+import niceuiPopupSelect from '@/components/niceui-popup-select'
+import { listApi, detailListApi, payApi } from '@/api/index.js'
 export default {
-  components: { Navigation },
+  components: { Navigation, niceuiPopupSelect },
   data() {
     return {
-      value: '',
-      form: {
-        number: ''
-      },
-      list: [
-        {
-          isOverdue: false
-        },
-        {
-          isOverdue: true
-        },
-        {
-          isOverdue: true
-        }
-      ],
-      checkboxValue: ''
+      inputValue: '',
+      // 展示列表
+      detailsList: [],
+      checkboxValue: [],
+      // 搜索列表
+      selectList: [],
+      selectValue: [],
+      totalNumber: 0
     }
   },
   computed: {},
+  created() {
+    listApi({
+      match: this.inputValue
+    }).then(res => {
+      this.selectList = res.data
+    })
+  },
   methods: {
+    // 确认支付
     toPayMode() {
-      uni.navigateTo({ url: '/pages/pay/components/payMode' })
+      let is = true
+      const data = []
+      this.detailsList.forEach((item, index) => {
+        if (!this.checkboxValue.includes(index) && item.noticeType === '逾期缴费通知') {
+          uni.showModal({
+            title: '提示!',
+            content: '请先缴纳逾期款!',
+            showCancel: false,
+            confirmText: '确定'
+          })
+          is = false
+          throw new Error()
+        }
+      })
+      if (is) {
+        this.checkboxValue.forEach(item => {
+          data.push({
+            accountsCode: this.detailsList[item].accountsCode,
+            code: this.detailsList[item].code,
+            endDate: this.detailsList[item].endDate,
+            money: this.detailsList[item].payableMoney,
+            payDate: this.detailsList[item].payDate,
+            payType: this.detailsList[item].payType,
+            startDate: this.detailsList[item].startDate,
+            registerDate: new Date(),
+            tollCompany: this.detailsList[item].tollCompany
+          })
+        })
+        payApi(data).then(res => {
+          if (res.state === 0) {
+            uni.showModal({
+              title: '提示!',
+              content: '缴费成功',
+              showCancel: false,
+              confirmText: '确定'
+            })
+          } else {
+            uni.showModal({
+              title: '提示!',
+              content: res.message,
+              showCancel: false,
+              confirmText: '确定'
+            })
+          }
+        })
+      }
+    },
+    // 弹框确认
+    confirmFruit(data) {
+      let code = ''
+      data.forEach((item, index) => {
+        if (index === data.length - 1) {
+          code += item
+        } else {
+          code += item + ','
+        }
+      })
+      detailListApi({
+        code
+      }).then(res => {
+        this.detailsList = res.data
+      })
+    },
+    // 勾选
+    change(value) {
+      this.totalNumber = 0
+      this.detailsList.forEach((item, index) => {
+        if (value.includes(index)) {
+          this.totalNumber += parseFloat(item.payableMoney)
+        }
+      })
     }
   },
-  watch: {},
-
-  // 页面周期函数--监听页面加载
-  onLoad() {},
-  // 页面周期函数--监听页面初次渲染完成
-  onReady() {},
-  // 页面周期函数--监听页面显示(not-nvue)
-  onShow() {},
-  // 页面周期函数--监听页面隐藏
-  onHide() {},
-  // 页面周期函数--监听页面卸载
-  onUnload() {}
-  // 页面处理函数--监听用户下拉动作
-  // onPullDownRefresh() { uni.stopPullDownRefresh(); },
-  // 页面处理函数--监听用户上拉触底
-  // onReachBottom() {},
-  // 页面处理函数--监听页面滚动(not-nvue)
-  // onPageScroll(event) {},
-  // 页面处理函数--用户点击右上角分享
-  // onShareAppMessage(options) {},
+  watch: {}
 }
 </script>
 
 <style lang="scss" scoped>
+.page {
+  margin-top: 100px;
+}
 .search {
   margin-top: 20px;
   padding: 0 20px;
+  position: relative;
+}
+.downList {
+  position: absolute;
+  display: flex;
+  width: 70%;
+  background-color: #fff;
+  border: 1px solid #e8e8e8;
+  margin-left: 40%;
+  margin-top: 5px;
+  transform: translate(-50%);
+  padding: 10px;
+  z-index: 10;
 }
 .text {
   margin-left: 20px;
@@ -120,7 +204,7 @@ export default {
   padding: 10px;
   width: 360px;
   height: 106px;
-  box-shadow: 13px 20px 20px -23px rgba(94, 93, 93, 0.4);
+  box-shadow: 0px 0px 5px rgba(94, 93, 93, 0.4);
   border-radius: 15px;
   display: flex;
   align-items: center;

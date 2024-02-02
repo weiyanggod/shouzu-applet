@@ -1,9 +1,8 @@
 const url_all = {
-  DEV: 'http://192.168.3.175:8043' // 开发
+  DEV: 'https://meiligj.jxufida.com:8821/applet' // 开发
 }
 let BASEURL = url_all['DEV']
 export const request = (options = {}) => {
-  console.log(options)
   return new Promise((resolve, rejects) => {
     handleRequest(options, resolve, rejects)
   })
@@ -13,6 +12,9 @@ function handleRequest(options, resolve, reject) {
     url: BASEURL + options.url,
     method: options.method,
     data: options.data,
+    header: {
+      Authorization: uni.getStorageSync('token') || ''
+    },
     success: response => {
       return resolve(response.data)
     },
