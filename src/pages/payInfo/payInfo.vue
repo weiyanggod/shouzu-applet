@@ -8,7 +8,11 @@
         <u-cell title="缴费区间" :value="(item.startDate || '') + ' - ' + (item.endDate || '')"></u-cell>
         <u-cell title="费用类型" :value="item.payTypeName || ''"></u-cell>
         <u-cell title="合同编号" :value="item.code || ''"></u-cell>
-        <u-cell title="租赁位置" :label="item.address || ''"></u-cell>
+        <u-cell title="租赁位置">
+          <template v-slot:value>
+            <div style="width: 60%; text-align: right">{{ item.address || '' }}</div></template
+          >
+        </u-cell>
         <u-cell title="到期日期" :value="item.endDate || ''"></u-cell>
         <u-cell title="应缴金额" :value="item.payableMoney || ''"></u-cell>
       </u-cell-group>
@@ -20,16 +24,17 @@
 </template>
 
 <script>
+import dayjs from 'dayjs'
 import Navigation from '@/components/navigation'
 import { detailListApi, payApi } from '@/api/index.js'
 export default {
   components: { Navigation },
   data() {
     return {
+      // 列表数据
       list: []
     }
   },
-  computed: {},
   methods: {
     submit(item) {
       const data = {
@@ -37,20 +42,19 @@ export default {
         code: item.code,
         endDate: item.endDate,
         money: item.payableMoney,
-        payDate: item.payDate,
+        payDate: dayjs().format('YYYY-MM-DD HH:mm:ss'),
         payType: item.payType,
         startDate: item.startDate,
-        registerDate: new Date(),
-        tollCompany: item.tollCompany
+        registerDate: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+        tollCompany: item.tollCompany,
+        id: item.id,
+        formsonId: item.formsonId,
+        unPayableMoney: item.unPayableMoney
       }
       payApi([data]).then(res => {
         if (res.state === 0) {
-          uni.showModal({
-            title: '提示!',
-            content: '缴费成功',
-            showCancel: false,
-            confirmText: '确定'
-          })
+          this.getList()
+          uni.navigateTo({ url: `/pages/pay/components/success?money=${data.money}` })
         } else {
           uni.showModal({
             title: '提示!',
@@ -60,16 +64,19 @@ export default {
           })
         }
       })
+    },
+    // 获取列表数据
+    getList() {
+      detailListApi({ isTotal: 1 }).then(res => {
+        this.list = res.data
+      })
     }
   },
   watch: {},
 
   // 页面周期函数--监听页面加载
   onLoad() {
-    detailListApi({ isTotal: 1 }).then(res => {
-      console.log(res)
-      this.list = res.data
-    })
+    this.getList()
   },
   // 页面周期函数--监听页面初次渲染完成
   onReady() {},
@@ -86,7 +93,7 @@ export default {
 .car {
   display: flex;
   flex-direction: column;
-  width: 320px;
+  width: 85%;
   margin-left: 50%;
   margin-top: 30px;
   transform: translate(-50%);

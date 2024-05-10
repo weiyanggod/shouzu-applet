@@ -8,11 +8,11 @@
       </view>
       <view class="mt-20" style="width: 100%">
         <u-cell-group>
-          <u-cell icon="/static/微信支付.png" title="微信支付">
+          <!-- <u-cell icon="/static/微信支付.png" title="微信支付">
             <u-radio-group slot="right-icon" v-model="payMode" placement="column">
               <u-radio label="微信支付" name="微信支付"> </u-radio>
             </u-radio-group>
-          </u-cell>
+          </u-cell> -->
           <u-cell icon="/static/农行支付.png" title="农行支付">
             <u-radio-group slot="right-icon" v-model="payMode" placement="column">
               <u-radio label="农行支付" name="农行支付"> </u-radio>
@@ -38,13 +38,7 @@ export default {
   computed: {},
   methods: {
     toPay() {
-      uni.showModal({
-        title: '提示!',
-        content: '请先缴纳逾期款',
-        showCancel: false,
-        confirmText: '确定'
-      })
-      // uni.navigateTo({ url: '/pages/pay/components/success' })
+      uni.navigateTo({ url: 'pages/web/web' })
     },
     dialogConfirm() {}
   },

@@ -12,6 +12,7 @@
             v-if="isSearch"
             v-model="searchVal"
             placeholder="输入关键字搜索"
+            cursor-spacing="300"
             @input="search"
           />
           <view class="check__all" v-if="multiple">
@@ -34,8 +35,8 @@
                 v-for="(item, index) in columnsData"
                 :key="index"
               >
-                <view class="cell-label">
-                  <view style="color: #cfcfcf; font-size: 16px">合同编号：{{ item[option.value] }}</view>
+                <view class="cell-label" style="color: #cfcfcf; font-size: 16px">
+                  <view style="color: #000">合同编号：{{ item[option.value] }}</view>
                   {{ item[option.label] }}</view
                 >
                 <view>
@@ -156,7 +157,7 @@ export default {
 
       if (val) {
         this.columnsData = this.columnsData.filter(item => {
-          return item[this.option.label].indexOf(val) > -1
+          return item[this.option.label].indexOf(val) > -1 || item[this.option.value].indexOf(val) > -1
         })
       } else {
         this.columnsData = JSON.parse(JSON.stringify(this.columns))

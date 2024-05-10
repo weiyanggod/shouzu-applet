@@ -1,9 +1,10 @@
 <template>
-  <view>
+  <view style="padding-top: 100px">
     <Navigation title="缴费成功"></Navigation>
+    <!-- <view style="margin-top: 100px"></view> -->
     <u-empty textColor="#4137bc" textSize="20" text="缴费成功!" icon="/static/success.png"> </u-empty>
     <view class="text">
-      <view class="mt-10">付款金额：¥ 20700.00</view>
+      <view class="mt-10">付款金额：¥ {{ money }}</view>
       <view class="mt-10">单号：DH000001</view>
       <view class="mt-10">发票请联系梅里集团业务人员进行办理</view>
     </view>
@@ -15,14 +16,19 @@ import Navigation from '@/components/navigation'
 export default {
   components: { Navigation },
   data() {
-    return {}
+    return {
+      money: 0
+    }
   },
   computed: {},
   methods: {},
   watch: {},
 
   // 页面周期函数--监听页面加载
-  onLoad() {},
+  onLoad(params) {
+    this.money = params.money
+    console.log(params)
+  },
   // 页面周期函数--监听页面初次渲染完成
   onReady() {},
   // 页面周期函数--监听页面显示(not-nvue)

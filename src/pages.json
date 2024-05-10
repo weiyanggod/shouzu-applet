@@ -37,13 +37,15 @@
         {
           "path": "payMode",
           "style": {
-            "navigationBarTitleText": "payMode"
+            "navigationBarTitleText": "payMode",
+            "navigationStyle": "custom"
           }
         },
         {
           "path": "success",
           "style": {
-            "navigationBarTitleText": "success"
+            "navigationBarTitleText": "success",
+            "navigationStyle": "custom"
           }
         }
       ]

@@ -1,3 +1,4 @@
+<!-- 立即缴费页面 -->
 <template>
   <view class="page">
     <Navigation title="立即缴费"></Navigation>
@@ -8,13 +9,12 @@
       isSearch
       ref="popup"
       :columns="selectList"
-      :is-search="false"
       :option="{ label: 'address', value: 'code' }"
       @confirm="confirmFruit"
     ></niceui-popup-select>
     <view class="text">搜索结果</view>
-    <view class="ml-15">
-      <u-checkbox-group v-model="checkboxValue" placement="column" @change="change">
+    <u-checkbox-group v-model="checkboxValue" placement="column" @change="change" class="list">
+      <view class="list">
         <view class="box" v-for="(item, index) in detailsList" :key="index">
           <u-checkbox :name="index"> </u-checkbox>
           <view class="right-text">
@@ -29,8 +29,8 @@
               >
               <view class="ml-5">
                 <u-tag
-                  v-if="item.noticeType !== '逾期缴费通知'"
-                  text=""
+                  v-if="item.noticeType === '正常缴费通知'"
+                  text="正常"
                   type="success"
                   size="mini"
                   plain
@@ -41,8 +41,8 @@
             </view>
           </view>
         </view>
-      </u-checkbox-group>
-    </view>
+      </view>
+    </u-checkbox-group>
     <view class="bottom">
       <view class="flex-ac-sb" style="width: 35%">
         <view>合计：</view>
@@ -63,6 +63,7 @@
 </template>
 
 <script>
+import dayjs from 'dayjs'
 import Navigation from '@/components/navigation'
 import niceuiPopupSelect from '@/components/niceui-popup-select'
 import { listApi, detailListApi, payApi } from '@/api/index.js'
@@ -70,14 +71,18 @@ export default {
   components: { Navigation, niceuiPopupSelect },
   data() {
     return {
+      // 输入框值
       inputValue: '',
       // 展示列表
       detailsList: [],
+      // 选择的数据
       checkboxValue: [],
-      // 搜索列表
+      // 搜索列表`
       selectList: [],
-      selectValue: [],
-      totalNumber: 0
+      // 总金额
+      totalNumber: 0,
+      // 当前选择的项目编号列表
+      code: []
     }
   },
   computed: {},
@@ -89,54 +94,58 @@ export default {
     })
   },
   methods: {
-    // 确认支付
+    // 确认支付按钮
     toPayMode() {
-      let is = true
+      // 是否有逾期的没勾选
+      const list = this.detailsList.filter(
+        (item, index) => !this.checkboxValue.includes(index) && item.noticeType === '逾期缴费通知'
+      )
+      if (list.length > 0) {
+        return uni.showModal({
+          title: '提示!',
+          content: '请先缴纳逾期费用',
+          showCancel: false,
+          confirmText: '确定'
+        })
+      }
       const data = []
-      this.detailsList.forEach((item, index) => {
-        if (!this.checkboxValue.includes(index) && item.noticeType === '逾期缴费通知') {
+      this.checkboxValue.forEach(item => {
+        data.push({
+          accountsCode: this.detailsList[item].accountsCode,
+          code: this.detailsList[item].code,
+          endDate: this.detailsList[item].endDate,
+          money: this.detailsList[item].payableMoney,
+          payDate: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+          payType: this.detailsList[item].payType,
+          startDate: this.detailsList[item].startDate,
+          registerDate: dayjs().format('YYYY-MM-DD HH:mm:ss'),
+          tollCompany: this.detailsList[item].tollCompany,
+          id: this.detailsList[item].id,
+          formsonId: this.detailsList[item].formsonId,
+          unPayableMoney: this.detailsList[item].unPayableMoney
+        })
+      })
+
+      payApi(data).then(res => {
+        if (res.state === 0) {
+          // uni.navigateTo({ url: '/pages/pay/components/payMode' })
+          // 清空选择
+          this.checkboxValue = []
+          detailListApi({
+            code: this.code
+          }).then(res => {
+            this.detailsList = res.data
+          })
+          uni.navigateTo({ url: `/pages/pay/components/success?money=${this.totalNumber}` })
+        } else {
           uni.showModal({
             title: '提示!',
-            content: '请先缴纳逾期款!',
+            content: res.message,
             showCancel: false,
             confirmText: '确定'
           })
-          is = false
-          throw new Error()
         }
       })
-      if (is) {
-        this.checkboxValue.forEach(item => {
-          data.push({
-            accountsCode: this.detailsList[item].accountsCode,
-            code: this.detailsList[item].code,
-            endDate: this.detailsList[item].endDate,
-            money: this.detailsList[item].payableMoney,
-            payDate: this.detailsList[item].payDate,
-            payType: this.detailsList[item].payType,
-            startDate: this.detailsList[item].startDate,
-            registerDate: new Date(),
-            tollCompany: this.detailsList[item].tollCompany
-          })
-        })
-        payApi(data).then(res => {
-          if (res.state === 0) {
-            uni.showModal({
-              title: '提示!',
-              content: '缴费成功',
-              showCancel: false,
-              confirmText: '确定'
-            })
-          } else {
-            uni.showModal({
-              title: '提示!',
-              content: res.message,
-              showCancel: false,
-              confirmText: '确定'
-            })
-          }
-        })
-      }
     },
     // 弹框确认
     confirmFruit(data) {
@@ -148,6 +157,7 @@ export default {
           code += item + ','
         }
       })
+      this.code = code
       detailListApi({
         code
       }).then(res => {
@@ -163,20 +173,21 @@ export default {
         }
       })
     }
-  },
-  watch: {}
+  }
 }
 </script>
 
 <style lang="scss" scoped>
 .page {
-  margin-top: 100px;
+  padding-top: 100px;
+  padding-bottom: 80px;
 }
 .search {
   margin-top: 20px;
   padding: 0 20px;
   position: relative;
 }
+
 .downList {
   position: absolute;
   display: flex;
@@ -196,13 +207,16 @@ export default {
   color: #333333;
   font-size: 14px;
 }
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
 .box {
   box-sizing: border-box;
-  margin-left: 50%;
   margin-top: 10px;
-  transform: translate(-50%);
+  width: 95%;
   padding: 10px;
-  width: 360px;
   height: 106px;
   box-shadow: 0px 0px 5px rgba(94, 93, 93, 0.4);
   border-radius: 15px;
@@ -219,14 +233,18 @@ export default {
     color: #999999;
   }
 }
+
 .bottom {
   position: fixed;
-  bottom: 3%;
+  bottom: 0%;
   width: 100%;
+  height: 60px;
   padding: 0px 20px;
   display: flex;
+  align-items: center;
   align-content: center;
   justify-content: space-between;
   box-sizing: border-box;
+  background-color: #fff;
 }
 </style>

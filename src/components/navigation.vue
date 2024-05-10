@@ -1,7 +1,7 @@
 <template>
   <view class="navigation">
     <view class="arrow" v-if="arrow" @click="back">
-      <u-icon name="arrow-left" size="20" color="#fff"></u-icon>
+      <u-icon name="arrow-left" size="20" color="#000"></u-icon>
     </view>
     <view class="title">
       {{ title }}
@@ -55,6 +55,7 @@ export default {
   .title {
     position: absolute;
     bottom: 10%;
+    color: #000;
   }
   .arrow {
     position: absolute;
