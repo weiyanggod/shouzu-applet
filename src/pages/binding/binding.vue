@@ -60,6 +60,7 @@ export default {
             this.showModal(res.message)
           } else {
             this.showModal('绑定成功')
+            uni.navigateTo({ url: '/pages/index/index' })
           }
         })
       })

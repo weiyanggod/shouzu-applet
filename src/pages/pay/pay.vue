@@ -3,7 +3,7 @@
   <view class="page">
     <Navigation title="立即缴费"></Navigation>
     <u-cell-group>
-      <u-cell isLink title="搜索项目" @click="$refs.popup.showPopup()"></u-cell>
+      <u-cell isLink title="请选择待缴费合同" @click="$refs.popup.showPopup()"></u-cell>
     </u-cell-group>
     <niceui-popup-select
       isSearch
@@ -59,6 +59,8 @@
         ></u-button>
       </view>
     </view>
+    <u-empty v-if="detailsList.length === 0" mode="search" icon="http://cdn.uviewui.com/uview/empty/search.png">
+    </u-empty>
   </view>
 </template>
 
