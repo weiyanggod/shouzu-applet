@@ -100,9 +100,34 @@ export default {
   methods: {
     // 确认支付按钮
     toPayMode() {
+      // 判断是否同一个主体
+      const { lessorAccount, tollCompany } = this.detailsList[this.checkboxValue[0]]
+      const isSubject = this.checkboxValue.every(
+        item =>
+          this.detailsList[item].lessorAccount === lessorAccount && this.detailsList[item].tollCompany === tollCompany
+      )
+      if (!isSubject) {
+        return uni.showModal({
+          title: '提示!',
+          content: '多个主体请分开缴费',
+          showCancel: false,
+          confirmText: '确定'
+        })
+      }
+      // 判断是否开通银行账户
+      const isAccountOpen = this.checkboxValue.every(item => this.detailsList[item].accountOpen === '开通')
+      if (!isAccountOpen) {
+        return uni.showModal({
+          title: '提示!',
+          content: '当前出租方未开通小程序支付功能 请线下缴费',
+          showCancel: false,
+          confirmText: '确定'
+        })
+      }
       // 是否有逾期的没勾选
       const list = this.detailsList.filter(
-        (item, index) => !this.checkboxValue.includes(index) && item.noticeType === '逾期缴费通知'
+        (item, index) =>
+          !this.checkboxValue.includes(index) && item.noticeType === '逾期缴费通知' && item.accountOpen === '开通'
       )
       if (list.length > 0) {
         return uni.showModal({
@@ -112,6 +137,12 @@ export default {
           confirmText: '确定'
         })
       }
+      return uni.showModal({
+        title: '提示!',
+        content: '成功',
+        showCancel: false,
+        confirmText: '确定'
+      })
       const data = []
       this.checkboxValue.forEach(item => {
         data.push({
@@ -126,7 +157,10 @@ export default {
           tollCompany: this.detailsList[item].tollCompany,
           id: this.detailsList[item].id,
           formsonId: this.detailsList[item].formsonId,
-          unPayableMoney: this.detailsList[item].unPayableMoney
+          unPayableMoney: this.detailsList[item].unPayableMoney,
+          lessorCode: this.detailsList[item].lessorCode,
+          lessorAccount: this.detailsList[item].lessorAccount,
+          accountOpen: this.detailsList[item].accountOpen
         })
       })
 

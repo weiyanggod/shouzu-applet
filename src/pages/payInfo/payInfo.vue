@@ -69,7 +69,10 @@ export default {
         tollCompany: item.tollCompany,
         id: item.id,
         formsonId: item.formsonId,
-        unPayableMoney: item.unPayableMoney
+        unPayableMoney: item.unPayableMoney,
+        lessorCode: item.lessorCode,
+        lessorAccount: item.lessorAccount,
+        accountOpen: item.accountOpen
       }
       payApi([data]).then(res => {
         if (res.state === 0) {
