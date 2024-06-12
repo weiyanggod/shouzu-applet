@@ -59,8 +59,15 @@ export default {
           if (res.state !== 0) {
             this.showModal(res.message)
           } else {
-            this.showModal('绑定成功')
-            uni.navigateTo({ url: '/pages/index/index' })
+            uni.showModal({
+              title: '提示!',
+              content: '绑定成功',
+              showCancel: false,
+              confirmText: '确定',
+              success: params => {
+                uni.navigateTo({ url: '/pages/index/index' })
+              }
+            })
           }
         })
       })

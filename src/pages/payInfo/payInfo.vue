@@ -1,3 +1,4 @@
+<!-- 缴费通知页面 -->
 <template>
   <view class="page">
     <Navigation title="缴费通知"></Navigation>
@@ -14,7 +15,18 @@
           >
         </u-cell>
         <u-cell title="到期日期" :value="item.endDate || ''"></u-cell>
-        <u-cell title="应缴金额" :value="item.payableMoney || ''"></u-cell>
+        <u-cell title="应缴金额">
+          <template v-slot:value>
+            <div style="text-align: right">
+              <u-text
+                mode="price"
+                color="#606266"
+                :text="item.payableMoney.toLocaleString() || ''"
+                type="info"
+              ></u-text>
+            </div>
+          </template>
+        </u-cell>
       </u-cell-group>
       <view class="mt-10" style="width: 80px; margin-left: auto">
         <u-button @click="submit(item)" type="primary" shape="circle" size="small">立即缴费</u-button>
@@ -37,6 +49,14 @@ export default {
   },
   methods: {
     submit(item) {
+      if (item.accountOpen === '未开通') {
+        return uni.showModal({
+          title: '提示!',
+          content: '支付失败 当前出租方未开通小程序支付功能 请线下缴费',
+          showCancel: false,
+          confirmText: '确定'
+        })
+      }
       const data = {
         accountsCode: item.accountsCode,
         code: item.code,

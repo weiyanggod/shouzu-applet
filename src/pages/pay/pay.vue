@@ -22,11 +22,13 @@
             <view>合同编号：{{ item.code }}</view>
             <view>缴费周期：{{ item.startDate ? item.startDate : '' }}-{{ item.endDate ? item.endDate : '' }}</view>
             <view style="display: flex; align-items: center">
-              <view
-                >缴费金额：<text :style="{ color: item.isOverdue ? '#f26161' : '' }">
-                  {{ item.payableMoney }}元</text
-                ></view
+              <view>缴费金额：</view>
+              <u-text
+                :color="!item.noticeType === '正常缴费通知' ? '#f26161' : ''"
+                mode="price"
+                :text="item.payableMoney"
               >
+              </u-text>
               <view class="ml-5">
                 <u-tag
                   v-if="item.noticeType === '正常缴费通知'"
@@ -44,9 +46,9 @@
       </view>
     </u-checkbox-group>
     <view class="bottom">
-      <view class="flex-ac-sb" style="width: 35%">
+      <view class="flex-ac-sb" style="min-width: 35%">
         <view>合计：</view>
-        <view style="color: #3b7bff">{{ totalNumber }}</view>
+        <u-text color="#3b7bff" size="16" mode="price" :text="totalNumber"> </u-text>
       </view>
       <view style="width: 100px">
         <u-button
